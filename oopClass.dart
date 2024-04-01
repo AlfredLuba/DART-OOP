@@ -1,12 +1,13 @@
+import 'dart:io';
+
+// Base class
 class School {
   String headTeacher;
   List<Teacher> teachers;
   List<Student> students;
 
-  
- // Constructor
   School(this.headTeacher, this.teachers, this.students);
-  
+
   void showSchoolInfo() {
     print('Head Teacher: $headTeacher');
     print('Teachers:');
@@ -25,6 +26,15 @@ class School {
     for (var teacher in teachers) {
       print('- ${teacher.name}');
     }
+  }
+
+  // Method to convert school data to string
+  String schoolDataToString() {
+    var data = StringBuffer();
+    data.writeln(headTeacher);
+    data.writeln(teachers.map((t) => '${t.name} (${t.id})').join(', '));
+    data.writeln(students.map((s) => '${s.name} (${s.location})').join(', '));
+    return data.toString();
   }
 }
 
@@ -56,7 +66,7 @@ class Student {
 class PLPAfrica extends School {
   PLPAfrica(String headTeacher, List<Teacher> teachers, List<Student> students)
       : super(headTeacher, teachers, students);
-  
+
   @override
   void showSchoolInfo() {
     print('PLP Africa');
@@ -65,7 +75,45 @@ class PLPAfrica extends School {
 }
 
 void main() {
-  // Initializing data for PLP Africa
+  // Read data from file
+  var file = File('AllData.txt');
+  if (file.existsSync()) {
+    var lines = file.readAsLinesSync();
+
+    // Extract data
+    var headTeacher = lines[0];
+
+    var teacherData = lines[1].split(', ');
+    var teachers = <Teacher>[];
+    for (var data in teacherData) {
+      var parts = data.split(' (');
+      var name = parts[0].trim();
+      var id = int.parse(parts[1].replaceAll(')', '').trim());
+      teachers.add(Teacher(name, id));
+    }
+
+    var studentData = lines[2].split(', ');
+    var students = <Student>[];
+    for (var data in studentData) {
+      var parts = data.split(' (');
+      var name = parts[0].trim();
+      var location = parts[1].replaceAll(')', '').trim();
+      students.add(Student(name, location));
+    }
+
+    // Create instance of PLP Africa
+    var plpAfrica = PLPAfrica(headTeacher, teachers, students);
+
+    // Show school information
+    plpAfrica.showSchoolInfo();
+
+    // List all teachers
+    plpAfrica.listTeachers();
+  } else {
+    print('File not found.');
+  }
+
+  // Write data to file
   var headTeacher = 'Mr. Munene';
   var teachers = [
     Teacher('Mr. Allen', 204),
@@ -78,13 +126,10 @@ void main() {
     Student('Alfred Balazire', 'Turkana'),
     Student('Josephat', 'Nairobi')
   ];
-  
-  // Creating instance of PLP Africa
-  var plpAfrica = PLPAfrica(headTeacher, teachers, students);
-  
-  // Showing school information
-  plpAfrica.showSchoolInfo();
 
-  // Calling the method to list all teachers
-  plpAfrica.listTeachers();
+  var plpAfrica = PLPAfrica(headTeacher, teachers, students);
+  var dataToWrite = plpAfrica.schoolDataToString();
+  file.writeAsStringSync(dataToWrite);
+
+  print('Data written to file.');
 }
